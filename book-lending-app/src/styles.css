@@ -1,0 +1,76 @@
+/* styles.css */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  .container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .heading {
+    text-align: center;
+    color: #333;
+  }
+  
+  .section {
+    margin-top: 20px;
+  }
+  
+  .subHeading {
+    color: #555;
+  }
+  
+  .list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .listItem {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+  }
+  
+  .bookDetails {
+    color: #333;
+  }
+  
+  .buttonsContainer {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .editButton {
+    margin-right: 8px;
+  }
+  
+  .deleteButton {
+    color: red;
+  }
+  
+  .button {
+    padding: 8px 16px;
+    margin-top: 10px;
+    background-color: #4caf50;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .form {
+    display: flex;
+    flex-direction: column;
+  }
+  
