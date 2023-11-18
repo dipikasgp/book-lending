@@ -5,6 +5,9 @@ import BookList from './BookList';
 import BookModal from './BookModal';
 import './styles.css';
 
+
+
+
 const App = () => {
   const [books, setBooks] = useState([]);
   const [newBook, setNewBook] = useState({
@@ -76,7 +79,7 @@ const App = () => {
   const handleEditBook = async () => {
     try {
       await axios.put(`http://localhost:8000/books/update_book`, {
-        id: selectedBook.id,
+        id: parseInt(selectedBook.id),
         title: selectedBook.title,
         author: selectedBook.author,
         description: selectedBook.description,
@@ -196,7 +199,7 @@ const App = () => {
         </BookModal>
       </div>
       <div style={styles.section}>
-        <h2 style={styles.subHeading}>Edit Book</h2>
+        {/* <h2 style={styles.subHeading}>Edit Book</h2> */}
         {selectedBook && (
           <BookModal
             isOpen={isEditModalOpen}
@@ -205,6 +208,51 @@ const App = () => {
           >
             <form style={styles.form}>
               {/* ... (edit book form content) */}
+              <label style={styles.label}>Title:</label>
+              <input
+                type="text"
+                name="title"
+                value={selectedBook.title}
+                onChange={handleEditInputChange}
+                style={styles.input}
+              />
+              <br />
+              <label style={styles.label}>Author:</label>
+              <input
+                type="text"
+                name="author"
+                value={selectedBook.author}
+                onChange={handleEditInputChange}
+                style={styles.input}
+              />
+              <br />
+              <label style={styles.label}>Description:</label>
+              <input
+                type="text"
+                name="description"
+                value={selectedBook.description}
+                onChange={handleEditInputChange}
+                style={styles.input}
+              />
+              <br />
+              <label style={styles.label}>Rating:</label>
+              <input
+                type="number"
+                name="rating"
+                value={selectedBook.rating}
+                onChange={handleEditInputChange}
+                style={styles.input}
+              />
+              <br />
+              <label style={styles.label}>Published Date:</label>
+              <input
+                type="number"
+                name="published_date"
+                value={selectedBook.published_date}
+                onChange={handleEditInputChange}
+                style={styles.input}
+              />
+              <br />
               <button type="button" onClick={handleEditBook} style={styles.button}>
                 Confirm
               </button>
