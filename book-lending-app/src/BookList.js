@@ -11,7 +11,7 @@ const BookList = ({ books, openEditModal, handleDeleteBook }) => {
               <p>Author: {book.author}</p>
               <p>Description: {book.description}</p>
               <p>Rating: {book.rating}</p>
-              <p>Published Date: {book.published_date}</p>
+              <p>Published Date: {book.published_year}</p>
             </div>
             <div style={styles.buttonsContainer}>
               <button

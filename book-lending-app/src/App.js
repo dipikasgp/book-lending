@@ -15,7 +15,7 @@ const App = () => {
     author: '',
     description: '',
     rating: 0,
-    published_date: 2000,
+    published_year: 2000,
   });
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -53,12 +53,11 @@ const App = () => {
   const handleCreateBook = async () => {
     try {
       await axios.post('http://localhost:8000/create-book', {
-        id: null,
         title: newBook.title,
         author: newBook.author,
         description: newBook.description,
         rating: parseInt(newBook.rating, 10),
-        published_date: parseInt(newBook.published_date, 10),
+        published_year: parseInt(newBook.published_year, 10),
       });
 
       setNewBook({
@@ -66,7 +65,7 @@ const App = () => {
         author: '',
         description: '',
         rating: 0,
-        published_date: 2000,
+        published_year: 2000,
       });
 
       setIsCreateModalOpen(false);
@@ -78,13 +77,13 @@ const App = () => {
 
   const handleEditBook = async () => {
     try {
-      await axios.put(`http://localhost:8000/books/update_book`, {
+      await axios.put(`http://localhost:8000/books/update_book/${selectedBook.id}`, {
         id: parseInt(selectedBook.id),
         title: selectedBook.title,
         author: selectedBook.author,
         description: selectedBook.description,
         rating: parseInt(selectedBook.rating, 10),
-        published_date: parseInt(selectedBook.published_date, 10),
+        published_year: parseInt(selectedBook.published_year, 10),
       });
 
       setIsEditModalOpen(false);
@@ -183,8 +182,8 @@ const App = () => {
             <label style={styles.label}>Published Date:</label>
             <input
               type="number"
-              name="published_date"
-              value={newBook.published_date}
+              name="published_year"
+              value={newBook.published_year}
               onChange={handleInputChange}
               style={styles.input}
             />
@@ -247,8 +246,8 @@ const App = () => {
               <label style={styles.label}>Published Date:</label>
               <input
                 type="number"
-                name="published_date"
-                value={selectedBook.published_date}
+                name="published_year"
+                value={selectedBook.published_year}
                 onChange={handleEditInputChange}
                 style={styles.input}
               />
