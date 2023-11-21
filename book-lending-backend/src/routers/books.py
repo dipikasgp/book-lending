@@ -1,43 +1,22 @@
-from typing import Optional, Annotated, Generator
+from typing import Generator
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 import uvicorn
-from fastapi import FastAPI, Path, Query, HTTPException, Depends
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Path, HTTPException, Depends
 from starlette import status
-from fastapi.middleware.cors import CORSMiddleware
-import models
 from models import Books
-from database import engine, SessionLocal
-
-app = FastAPI()
-
-models.Base.metadata.create_all(bind=engine)
-
-# Allow all origins, allow all methods, allow all headers
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+from database import SessionLocal
 
 
-class Book:
-    id: int
-    title: str
-    author: str
-    description: str
-    rating: int
-    published_year: int
+router = APIRouter()
 
-    def __init__(self, id, title, author, description, rating, published_year):
-        self.id = id
-        self.title = title
-        self.author = author
-        self.description = description
-        self.rating = rating
-        self.published_year = published_year
+
+def get_db() -> Generator[Session, None, None]:
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 class BookRequest(BaseModel):
@@ -59,22 +38,14 @@ class BookRequest(BaseModel):
         }
 
 
-def get_db() -> Generator[Session, None, None]:
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-@app.get("/books", status_code=status.HTTP_200_OK)
+@router.get("/books", status_code=status.HTTP_200_OK)
 async def read_all(db: Session = Depends(get_db)):
     books = db.query(Books).all()
     print(books)
     return books
 
 
-@app.get("/books/{book_id}", status_code=status.HTTP_200_OK)
+@router.get("/books/{book_id}", status_code=status.HTTP_200_OK)
 async def read_book(db: Session = Depends(get_db), book_id: int = Path(gt=0)):
     book_model = db.query(Books).filter(Books.id == book_id).first()
     if book_model is not None:
@@ -82,14 +53,14 @@ async def read_book(db: Session = Depends(get_db), book_id: int = Path(gt=0)):
     raise HTTPException(status_code=404, detail='Item not found')
 
 
-@app.post("/create-book", status_code=status.HTTP_201_CREATED)
+@router.post("/create-book", status_code=status.HTTP_201_CREATED)
 async def create_book(book_request: BookRequest, db: Session = Depends(get_db)):
     book_model = Books(**book_request.model_dump())
     db.add(book_model)
     db.commit()
 
 
-@app.put("/books/update_book/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.put("/books/update_book/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def update_book(book_req: BookRequest, book_id: int = Path(gt=0), db: Session = Depends(get_db)):
     book_model = db.query(Books).filter(Books.id == book_id).first()
     if book_model is None:
@@ -104,7 +75,7 @@ async def update_book(book_req: BookRequest, book_id: int = Path(gt=0), db: Sess
     db.commit()
 
 
-@app.delete("/books/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/books/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_book_by_id(book_id: int = Path(gt=0), db: Session = Depends(get_db)):
     book_model = db.query(Books).filter(Books.id == book_id).first()
     if book_model is None:
@@ -114,4 +85,4 @@ async def delete_book_by_id(book_id: int = Path(gt=0), db: Session = Depends(get
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, port=8000, host="0.0.0.0")
+    uvicorn.run(router, port=8000, host="0.0.0.0")
