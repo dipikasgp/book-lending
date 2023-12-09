@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Generator, Annotated
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 import uvicorn
@@ -6,9 +6,13 @@ from fastapi import APIRouter, Path, HTTPException, Depends
 from starlette import status
 from models import Books
 from database import SessionLocal
+from .auth import get_current_user
 
 
-router = APIRouter()
+router = APIRouter(
+    prefix='/books',
+    tags=['books']
+)
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -17,6 +21,9 @@ def get_db() -> Generator[Session, None, None]:
         yield db
     finally:
         db.close()
+
+
+user_dependency = Annotated[dict, Depends(get_current_user)]
 
 
 class BookRequest(BaseModel):
@@ -39,30 +46,41 @@ class BookRequest(BaseModel):
 
 
 @router.get("/books", status_code=status.HTTP_200_OK)
-async def read_all(db: Session = Depends(get_db)):
-    books = db.query(Books).all()
+async def read_all(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    if user is None:
+        raise HTTPException(status_code=401, detail='Authentication Failed')
+    books = db.query(Books).filter(user.get('id') == Books.owner_id).all()
     print(books)
     return books
 
 
 @router.get("/books/{book_id}", status_code=status.HTTP_200_OK)
-async def read_book(db: Session = Depends(get_db), book_id: int = Path(gt=0)):
-    book_model = db.query(Books).filter(Books.id == book_id).first()
+async def read_book(user: dict = Depends(get_current_user), db: Session = Depends(get_db), book_id: int = Path(gt=0)):
+    if user is None:
+        raise HTTPException(status_code=401, detail='Authentication Failed')
+    book_model = db.query(Books).filter(Books.id == book_id).\
+        filter(user.get('id') == Books.owner_id).first()
     if book_model is not None:
         return book_model
     raise HTTPException(status_code=404, detail='Item not found')
 
 
 @router.post("/create-book", status_code=status.HTTP_201_CREATED)
-async def create_book(book_request: BookRequest, db: Session = Depends(get_db)):
-    book_model = Books(**book_request.model_dump())
+async def create_book(book_request: BookRequest, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    if user is None:
+        raise HTTPException(status_code=401, detail='Authentication Failed')
+    book_model = Books(**book_request.model_dump(),owner_id=user.get('id'))
     db.add(book_model)
     db.commit()
+    return {"message": "Book created successfully"}
 
 
 @router.put("/books/update_book/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def update_book(book_req: BookRequest, book_id: int = Path(gt=0), db: Session = Depends(get_db)):
-    book_model = db.query(Books).filter(Books.id == book_id).first()
+async def update_book(book_req: BookRequest, book_id: int = Path(gt=0), db: Session = Depends(get_db),
+                      user: dict = Depends(get_current_user)):
+    if user is None:
+        raise HTTPException(status_code=401, detail='Authentication Failed')
+    book_model = db.query(Books).filter(Books.id == book_id).filter(user.get('id') == Books.owner_id).first().first()
     if book_model is None:
         raise HTTPException(status_code=404, detail='Item not found')
 
@@ -75,13 +93,7 @@ async def update_book(book_req: BookRequest, book_id: int = Path(gt=0), db: Sess
     db.commit()
 
 
-@router.delete("/books/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_book_by_id(book_id: int = Path(gt=0), db: Session = Depends(get_db)):
-    book_model = db.query(Books).filter(Books.id == book_id).first()
-    if book_model is None:
-        raise HTTPException(status_code=404, detail='Item not found')
-    db.query(Books).filter(Books.id == book_id).delete()
-    db.commit()
+
 
 
 if __name__ == "__main__":
